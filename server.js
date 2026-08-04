@@ -4,8 +4,10 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, 'data.json');
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || __dirname;
+const DATA_FILE = path.join(DATA_DIR, 'data.json');
 const EDIT_PIN = process.env.EDIT_PIN || 'gjeane202'; // pode trocar por variável de ambiente no Railway depois
+const PIX_KEY = process.env.PIX_KEY || '37999210294';
 
 const DEFAULT_CAKES = [
   { id: "choc",    name: "Bolo de Chocolate",    desc: "Massa fofinha com cobertura de brigadeiro", price: 35, emoji: "🍫", style: "chocolate", image: null },
@@ -30,6 +32,10 @@ function writeCakes(cakes) {
 
 app.use(express.json({ limit: '25mb' })); // imagens em base64 precisam de um limite maior
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/api/config', (req, res) => {
+  res.json({ pixKey: PIX_KEY });
+});
 
 app.get('/api/cakes', (req, res) => {
   res.json(readCakes());

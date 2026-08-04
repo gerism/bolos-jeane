@@ -228,6 +228,28 @@
     padding:15px; border-radius:12px; font-weight:700; font-size:15px;
     cursor:pointer; margin-top:6px; display:flex; align-items:center; justify-content:center; gap:8px;
   }
+  #pix-box{
+    background: rgba(124,139,91,0.12);
+    border:1.5px dashed var(--sage);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:12px;
+  }
+  #pix-box label{
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--sage); display:block; margin-bottom:6px;
+  }
+  .pix-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  #pix-key-val{
+    font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--cocoa);
+  }
+  #copy-pix-btn{
+    background: var(--sage); color:white; border:none; border-radius:8px;
+    padding:7px 12px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
+  }
+  #copy-pix-btn:hover{ filter:brightness(1.1); }
   #send-btn:hover{ filter:brightness(1.06); }
   #close-ticket{
     position:absolute; top:16px; right:16px; background:none; border:none;
@@ -342,6 +364,14 @@
     <div class="field">
       <label for="cust-note">Observações (opcional)</label>
       <textarea id="cust-note" rows="2" placeholder="Ex: sem cobertura, retirar sexta à tarde..."></textarea>
+    </div>
+
+    <div id="pix-box">
+      <label>Chave Pix pra pagamento</label>
+      <div class="pix-row">
+        <span id="pix-key-val">carregando...</span>
+        <button id="copy-pix-btn" type="button">Copiar</button>
+      </div>
     </div>
 
     <button id="send-btn">Enviar pedido pelo WhatsApp</button>
@@ -694,7 +724,37 @@ document.getElementById('send-btn').addEventListener('click', () => {
   window.open(url, '_blank');
 });
 
+let pixKey = '';
+async function loadPixKey(){
+  try{
+    const res = await fetch('/api/config');
+    const data = await res.json();
+    pixKey = data.pixKey || '';
+    document.getElementById('pix-key-val').textContent = pixKey || 'não configurada';
+  } catch(e){
+    document.getElementById('pix-key-val').textContent = 'erro ao carregar';
+  }
+}
+
+document.getElementById('copy-pix-btn').addEventListener('click', () => {
+  if(!pixKey) return;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(pixKey).then(
+      () => {
+        const btn = document.getElementById('copy-pix-btn');
+        const original = btn.textContent;
+        btn.textContent = 'Copiado!';
+        setTimeout(() => btn.textContent = original, 1500);
+      },
+      () => prompt('Copie a chave Pix:', pixKey)
+    );
+  } else {
+    prompt('Copie a chave Pix:', pixKey);
+  }
+});
+
 loadCakes();
+loadPixKey();
 </script>
 </body>
 </html>
