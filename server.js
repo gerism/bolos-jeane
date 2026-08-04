@@ -28,7 +28,7 @@ function writeCakes(cakes) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(cakes, null, 2));
 }
 
-app.use(express.json({ limit: '15mb' })); // imagens em base64 precisam de um limite maior
+app.use(express.json({ limit: '25mb' })); // imagens em base64 precisam de um limite maior
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/cakes', (req, res) => {

@@ -454,10 +454,31 @@ function handleImageUpload(id, file){
   if(!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    const cake = CAKES.find(c => c.id === id);
-    if(cake) cake.image = reader.result;
-    renderGrid();
+    const img = new Image();
+    img.onload = () => {
+      const MAX_SIDE = 900;
+      let { width, height } = img;
+      if(width > height && width > MAX_SIDE){
+        height = Math.round(height * (MAX_SIDE / width));
+        width = MAX_SIDE;
+      } else if(height > MAX_SIDE){
+        width = Math.round(width * (MAX_SIDE / height));
+        height = MAX_SIDE;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      const compressed = canvas.toDataURL('image/jpeg', 0.75);
+      const cake = CAKES.find(c => c.id === id);
+      if(cake) cake.image = compressed;
+      renderGrid();
+    };
+    img.onerror = () => alert('Não consegui ler essa foto. Tenta outra.');
+    img.src = reader.result;
   };
+  reader.onerror = () => alert('Não consegui ler essa foto. Tenta outra.');
   reader.readAsDataURL(file);
 }
 
@@ -529,8 +550,14 @@ async function saveCakes(){
     });
     const data = await res.json().catch(() => ({}));
     if(!res.ok){
-      alert(data.error || 'Não consegui salvar. Confira a senha.');
-      sessionPin = null;
+      if(res.status === 401){
+        alert(data.error || 'Senha incorreta.');
+        sessionPin = null;
+      } else if(res.status === 413){
+        alert('As fotos ficaram grandes demais pra salvar de uma vez. Tenta remover uma foto, salvar, e adicionar as outras aos poucos.');
+      } else {
+        alert(data.error || `Não consegui salvar (erro ${res.status}). Tenta de novo.`);
+      }
     } else {
       alert('Salvo! Quem abrir o link agora já vê o cardápio atualizado.');
     }
