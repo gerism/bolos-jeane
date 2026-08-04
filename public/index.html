@@ -228,8 +228,17 @@
     border:none; border-radius:8px; padding:9px 14px; font-weight:700; font-size:13px; cursor:pointer;
   }
   #edit-bar #add-cake-btn{ background:rgba(255,255,255,0.9); color:var(--sage); }
-  #edit-bar #download-btn{ background:var(--butter); color:var(--cocoa); }
+  #edit-bar #save-btn{ background:var(--butter); color:var(--cocoa); }
   #edit-bar #exit-edit-btn{ background:rgba(255,255,255,0.2); color:white; }
+
+  #share-fab{
+    position:fixed; top:16px; right:16px; z-index:55;
+    background: var(--cocoa); color: var(--paper);
+    border:none; border-radius:999px; padding:10px 16px;
+    font-family:'DM Sans',sans-serif; font-weight:700; font-size:13px;
+    cursor:pointer; box-shadow:0 6px 18px rgba(46,29,20,0.25);
+  }
+  #share-fab:hover{ filter:brightness(1.1); }
 
   .remove-card-btn{
     position:absolute; top:8px; right:8px; z-index:2;
@@ -266,10 +275,12 @@
   <span>✎ Modo edição — altere preço, foto e nome nos cards abaixo</span>
   <div class="actions">
     <button id="add-cake-btn">+ Adicionar bolo</button>
-    <button id="download-btn">Baixar página atualizada</button>
+    <button id="save-btn">Salvar alterações</button>
     <button id="exit-edit-btn">Sair</button>
   </div>
 </div>
+
+<button id="share-fab" title="Copiar link da página">🔗 Compartilhar link</button>
 
 <header>
   <div class="eyebrow">Feito à mão · Corumbá, Cláudio, MG</div>
@@ -324,22 +335,22 @@
    3) Troque o nome do negócio no <h1> e no <title> lá em cima.
    ========================================================= */
 
-const ORIGINAL_HTML = document.documentElement.outerHTML;
-
 const WHATSAPP_NUMBER = "5537999210294";
-const EDIT_PIN = "jeane2026"; // <-- TROCAR pela senha que a Jeane vai usar pra editar
+const EDIT_PIN = "jeane2026"; // usada só pra abrir a tela de edição; a senha de verdade é conferida no servidor
 
-const CAKES = /*CAKES_JSON_START*/[
+let CAKES = [];
+const cart = {};
+let editMode = false;
+let sessionPin = null;
+
+const FALLBACK_CAKES = [
   { id:"choc",    name:"Bolo de Chocolate",        desc:"Massa fofinha com cobertura de brigadeiro", price:35, emoji:"🍫", style:"chocolate", image:null },
   { id:"morango", name:"Naked Cake de Morango",     desc:"Camadas de baunilha, chantininho e morango", price:55, emoji:"🍓", style:"morango", image:null },
   { id:"cenoura", name:"Cenoura com Chocolate",     desc:"O clássico que nunca falha",                 price:30, emoji:"🥕", style:"cenoura", image:null },
   { id:"redvel",  name:"Red Velvet",                desc:"Aveludado, com cream cheese",                 price:45, emoji:"❤️", style:"red", image:null },
   { id:"fuba",    name:"Bolo de Fubá Cremoso",      desc:"Com goiabada derretida por dentro",           price:28, emoji:"🌽", style:"fuba", image:null },
   { id:"limao",   name:"Bolo de Limão",             desc:"Leve, com calda cítrica",                     price:28, emoji:"🍋", style:"limao", image:null },
-]/*CAKES_JSON_END*/;
-
-const cart = {}; // id -> qty
-let editMode = true;
+];
 
 function formatBRL(v){
   return v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
@@ -435,23 +446,59 @@ function toggleEdit(forceOff){
   renderGrid();
 }
 
-function downloadUpdatedPage(){
+async function loadCakes(){
   try{
-    const newCakesBlock = JSON.stringify(CAKES, null, 2);
-    let html = ORIGINAL_HTML.replace(
-      /\/\*CAKES_JSON_START\*\/[\s\S]*?\/\*CAKES_JSON_END\*\//,
-      `/*CAKES_JSON_START*/${newCakesBlock}/*CAKES_JSON_END*/`
-    );
-    html = '<!DOCTYPE html>\n' + html;
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'pedido-bolos.html';
-    a.click();
-    URL.revokeObjectURL(url);
+    const res = await fetch('/api/cakes');
+    if(!res.ok) throw new Error('falhou');
+    CAKES = await res.json();
+  } catch(e){
+    // fallback pra quando não tem servidor (ex: abrindo o arquivo local direto)
+    CAKES = FALLBACK_CAKES;
+  }
+  renderGrid();
+  updateCartBar();
+  document.getElementById('edit-bar').classList.toggle('show', editMode);
+}
+
+async function saveCakes(){
+  if(!sessionPin){
+    sessionPin = prompt("Confirma a senha pra salvar:");
+    if(!sessionPin) return;
+  }
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Salvando...';
+  try{
+    const res = await fetch('/api/cakes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: sessionPin, cakes: CAKES })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok){
+      alert(data.error || 'Não consegui salvar. Confira a senha.');
+      sessionPin = null;
+    } else {
+      alert('Salvo! Quem abrir o link agora já vê o cardápio atualizado.');
+    }
   } catch(err){
-    alert("Algo deu errado ao gerar o arquivo. Tente recarregar a página e refazer as edições.");
+    alert('Erro de conexão. Tenta de novo.');
+  } finally{
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+function shareLink(){
+  const url = window.location.origin + window.location.pathname;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(
+      () => alert('Link copiado:\n' + url),
+      () => prompt('Copie o link:', url)
+    );
+  } else {
+    prompt('Copie o link:', url);
   }
 }
 
@@ -486,9 +533,10 @@ function addCake(){
 }
 
 document.getElementById('add-cake-btn').addEventListener('click', addCake);
+document.getElementById('save-btn').addEventListener('click', saveCakes);
+document.getElementById('share-fab').addEventListener('click', shareLink);
 document.getElementById('edit-toggle').addEventListener('click', () => toggleEdit(false));
 document.getElementById('exit-edit-btn').addEventListener('click', () => toggleEdit(true));
-document.getElementById('download-btn').addEventListener('click', downloadUpdatedPage);
 
 function changeQty(id, delta){
   const current = cart[id] || 0;
@@ -567,9 +615,7 @@ document.getElementById('send-btn').addEventListener('click', () => {
   window.open(url, '_blank');
 });
 
-renderGrid();
-updateCartBar();
-document.getElementById('edit-bar').classList.toggle('show', editMode);
+loadCakes();
 </script>
 </body>
 </html>
