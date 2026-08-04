@@ -361,7 +361,6 @@
    ========================================================= */
 
 const WHATSAPP_NUMBER = "5537999210294";
-const EDIT_PIN = "gjeane202"; // usada só pra abrir a tela de edição; a senha de verdade é conferida no servidor
 
 let CAKES = [];
 const cart = {};
@@ -454,15 +453,29 @@ function removeImage(id){
   renderGrid();
 }
 
-function toggleEdit(forceOff){
+async function toggleEdit(forceOff){
   if(forceOff){
     editMode = false;
+    sessionPin = null;
   } else if(!editMode){
     const pin = prompt("Senha pra editar o cardápio:");
-    if(pin !== EDIT_PIN){
-      if(pin !== null) alert("Senha incorreta.");
+    if(pin === null) return;
+    try{
+      const res = await fetch('/api/verify-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      });
+      const data = await res.json();
+      if(!data.ok){
+        alert("Senha incorreta.");
+        return;
+      }
+    } catch(e){
+      alert("Erro de conexão. Tenta de novo.");
       return;
     }
+    sessionPin = pin;
     editMode = true;
   } else {
     editMode = false;

@@ -5,7 +5,7 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
-const EDIT_PIN = process.env.EDIT_PIN || 'jeane2026'; // pode trocar por variável de ambiente no Railway depois
+const EDIT_PIN = process.env.EDIT_PIN || 'gjeane202'; // pode trocar por variável de ambiente no Railway depois
 
 const DEFAULT_CAKES = [
   { id: "choc",    name: "Bolo de Chocolate",    desc: "Massa fofinha com cobertura de brigadeiro", price: 35, emoji: "🍫", style: "chocolate", image: null },
@@ -33,6 +33,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/cakes', (req, res) => {
   res.json(readCakes());
+});
+
+app.post('/api/verify-pin', (req, res) => {
+  const { pin } = req.body || {};
+  res.json({ ok: pin === EDIT_PIN });
 });
 
 app.post('/api/cakes', (req, res) => {
