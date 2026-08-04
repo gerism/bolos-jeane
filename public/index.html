@@ -393,7 +393,7 @@ function renderGrid(){
       </div>
       <div class="card-body">
         <h3>${cake.name}</h3>
-        <div class="desc">${cake.desc}</div>
+        <div class="desc" style="${cake.desc ? '' : 'display:none;'}">${cake.desc || ''}</div>
         <div class="price">${formatBRL(cake.price)}</div>
         <div class="qty-row">
           <div class="stepper">
@@ -408,6 +408,10 @@ function renderGrid(){
           <div>
             <label>Nome do bolo</label>
             <input type="text" value="${cake.name}" oninput="updateField('${cake.id}','name',this.value)">
+          </div>
+          <div>
+            <label>Descrição</label>
+            <input type="text" value="${cake.desc || ''}" placeholder="(deixe vazio pra não mostrar nada)" oninput="updateField('${cake.id}','desc',this.value)">
           </div>
           <div>
             <label>Preço (R$)</label>
@@ -429,12 +433,19 @@ function renderGrid(){
 function updateField(id, field, value){
   const cake = CAKES.find(c => c.id === id);
   if(cake) cake[field] = value;
-  if(field === 'name' || field === 'price'){
+  if(field === 'name' || field === 'price' || field === 'desc'){
     // atualiza só o texto na tela sem re-renderizar tudo (evita perder foco do input)
     const card = [...document.querySelectorAll('.card')].find(c => c.querySelector(`[onclick*="'${id}'"]`));
     if(card){
       if(field === 'name') card.querySelector('h3').textContent = value;
       if(field === 'price') card.querySelector('.price').textContent = formatBRL(value);
+      if(field === 'desc'){
+        const descEl = card.querySelector('.desc');
+        if(descEl){
+          descEl.textContent = value;
+          descEl.style.display = value ? '' : 'none';
+        }
+      }
     }
   }
 }
