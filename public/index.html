@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bolos da Jeane — Faça seu pedido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cocoa:#2E1D14;
+    --paper:#FBF1E0;
+    --raspberry:#C23B62;
+    --raspberry-dark:#9E2E4E;
+    --butter:#F0B94D;
+    --sage:#7C8B5B;
+    --white:#FFFFFF;
+    --line: rgba(46,29,20,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--paper);
+    color: var(--cocoa);
+    font-family:'DM Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom: 90px;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    padding: 48px 24px 32px;
+    text-align:center;
+    position:relative;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color: var(--raspberry-dark);
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-optical-sizing:auto;
+    font-weight:700;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    margin: 0 0 8px;
+    line-height:1.05;
+  }
+  header p.sub{
+    font-size:15px;
+    color: rgba(46,29,20,0.7);
+    max-width:420px;
+    margin:0 auto;
+  }
+  .divider{
+    width:64px;height:3px;background:var(--butter);
+    margin:20px auto 0; border-radius:2px;
+  }
+
+  /* ---------- GRID ---------- */
+  main{
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 8px 20px 40px;
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px,1fr));
+    gap:20px;
+  }
+
+  .card{
+    background: var(--white);
+    border-radius:18px;
+    padding:0;
+    overflow:hidden;
+    box-shadow: 0 1px 0 var(--line), 0 8px 24px -12px rgba(46,29,20,0.25);
+    display:flex;
+    flex-direction:column;
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .card:hover{ transform: translateY(-3px); box-shadow: 0 1px 0 var(--line), 0 16px 30px -14px rgba(46,29,20,0.32); }
+
+  .thumb{
+    height:130px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:44px;
+    position:relative; overflow:hidden;
+  }
+  .thumb img{ width:100%; height:100%; object-fit:cover; }
+  .thumb.chocolate{ background: linear-gradient(135deg,#6b4327,#3d2716); }
+  .thumb.morango{ background: linear-gradient(135deg,#f3a6bd,#e06d92); }
+  .thumb.cenoura{ background: linear-gradient(135deg,#f0b94d,#d9822c); }
+  .thumb.red{ background: linear-gradient(135deg,#b3324a,#7a1f36); }
+  .thumb.fuba{ background: linear-gradient(135deg,#f4d78c,#e0b45a); }
+  .thumb.limao{ background: linear-gradient(135deg,#d7dd8f,#a9b45c); }
+
+  .card-body{ padding:16px 16px 18px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .card-body h3{
+    font-family:'Fraunces', serif;
+    font-size:19px; margin:0; font-weight:600;
+  }
+  .card-body .desc{
+    font-size:13px; color:rgba(46,29,20,0.62); line-height:1.4; min-height:34px;
+  }
+  .price{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600; font-size:15px; color:var(--raspberry-dark);
+    margin-top:4px;
+  }
+
+  .qty-row{
+    margin-top:10px;
+    display:flex; align-items:center; justify-content:space-between;
+    border-top:1px dashed var(--line);
+    padding-top:12px;
+  }
+  .stepper{
+    display:flex; align-items:center; gap:0;
+    border:1.5px solid var(--cocoa); border-radius:10px; overflow:hidden;
+  }
+  .stepper button{
+    width:32px;height:32px; border:none; background:var(--white); color:var(--cocoa);
+    font-size:16px; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:700;
+  }
+  .stepper button:hover{ background: var(--butter); }
+  .stepper span{
+    width:28px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:14px;
+  }
+  .add-note{ font-size:11px; color:rgba(46,29,20,0.45); }
+
+  /* ---------- CART TICKET (mobile bottom bar) ---------- */
+  #cart-bar{
+    position:fixed; left:0; right:0; bottom:0;
+    background: var(--cocoa);
+    color: var(--paper);
+    padding:14px 20px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px;
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.18);
+    z-index:50;
+  }
+  #cart-bar .info{ font-family:'IBM Plex Mono', monospace; font-size:13px; }
+  #cart-bar .info b{ font-family:'Fraunces',serif; font-size:16px; display:block; }
+  #cart-bar button#open-ticket{
+    background: var(--raspberry);
+    color:white; border:none; padding:11px 18px; border-radius:10px;
+    font-weight:700; font-size:14px; cursor:pointer; font-family:'DM Sans',sans-serif;
+  }
+  #cart-bar button#open-ticket:disabled{ background:#5c4c42; cursor:not-allowed; }
+
+  /* ---------- TICKET MODAL ---------- */
+  #overlay{
+    position:fixed; inset:0; background:rgba(46,29,20,0.55);
+    display:none; align-items:flex-end; justify-content:center;
+    z-index:100;
+  }
+  #overlay.show{ display:flex; }
+  #ticket{
+    background: var(--white);
+    width:100%; max-width:420px;
+    border-radius:20px 20px 0 0;
+    padding:26px 24px 24px;
+    max-height:82vh; overflow-y:auto;
+    position:relative;
+    animation: slideUp .25s ease;
+  }
+  @media(min-width:640px){
+    #overlay{ align-items:center; }
+    #ticket{ border-radius:20px; }
+  }
+  @keyframes slideUp{ from{ transform:translateY(30px); opacity:0;} to{ transform:translateY(0); opacity:1; } }
+
+  #ticket h2{
+    font-family:'Fraunces',serif; font-size:22px; margin:0 0 2px;
+  }
+  #ticket .ticket-sub{ font-size:12px; color:rgba(46,29,20,0.5); font-family:'IBM Plex Mono',monospace; margin-bottom:16px;}
+  #ticket-items{ border-top:1px dashed var(--line); border-bottom:1px dashed var(--line); padding:10px 0; margin-bottom:14px; }
+  .t-row{ display:flex; justify-content:space-between; font-size:14px; padding:6px 0; font-family:'IBM Plex Mono',monospace;}
+  .t-row .name{ color:var(--cocoa); }
+  .t-row .val{ color:rgba(46,29,20,0.6); }
+  #ticket-total{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'Fraunces',serif; font-size:20px; font-weight:700; margin-bottom:18px;
+  }
+  #ticket-total span.label{ font-size:13px; font-family:'DM Sans',sans-serif; font-weight:400; color:rgba(46,29,20,0.6);}
+
+  .field{ margin-bottom:12px; }
+  .field label{ font-size:12px; font-weight:700; display:block; margin-bottom:5px; color:var(--cocoa); }
+  .field input, .field textarea{
+    width:100%; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px;
+    font-family:'DM Sans',sans-serif; font-size:14px; background:var(--paper);
+  }
+  .field input:focus, .field textarea:focus{ outline:2px solid var(--raspberry); border-color:transparent; }
+
+  #send-btn{
+    width:100%; background: var(--sage); color:white; border:none;
+    padding:15px; border-radius:12px; font-weight:700; font-size:15px;
+    cursor:pointer; margin-top:6px; display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  #send-btn:hover{ filter:brightness(1.06); }
+  #close-ticket{
+    position:absolute; top:16px; right:16px; background:none; border:none;
+    font-size:20px; cursor:pointer; color:rgba(46,29,20,0.5);
+  }
+  .empty-msg{ font-size:13px; color:rgba(46,29,20,0.5); text-align:center; padding:20px 0; }
+
+  footer{ text-align:center; padding:24px; font-size:12px; color:rgba(46,29,20,0.4); }
+  footer .edit-link{
+    display:inline-block; margin-top:6px; font-size:11px;
+    color:rgba(46,29,20,0.35); text-decoration:underline; cursor:pointer;
+    background:none; border:none; font-family:'DM Sans',sans-serif;
+  }
+
+  /* ---------- EDIT MODE ---------- */
+  #edit-bar{
+    position:sticky; top:0; z-index:60;
+    background: var(--sage); color:white;
+    padding:12px 20px; display:none;
+    align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    font-family:'DM Sans',sans-serif; font-size:13px;
+  }
+  #edit-bar.show{ display:flex; }
+  #edit-bar .actions{ display:flex; gap:8px; }
+  #edit-bar button{
+    border:none; border-radius:8px; padding:9px 14px; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  #edit-bar #add-cake-btn{ background:rgba(255,255,255,0.9); color:var(--sage); }
+  #edit-bar #download-btn{ background:var(--butter); color:var(--cocoa); }
+  #edit-bar #exit-edit-btn{ background:rgba(255,255,255,0.2); color:white; }
+
+  .remove-card-btn{
+    position:absolute; top:8px; right:8px; z-index:2;
+    width:26px; height:26px; border-radius:50%; border:none;
+    background:rgba(46,29,20,0.55); color:white; font-size:14px; line-height:1;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .remove-card-btn:hover{ background:var(--raspberry); }
+  .card{ position:relative; }
+
+  .admin-fields{
+    border-top:1px dashed var(--line); margin-top:10px; padding-top:10px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .admin-fields label{
+    font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color:rgba(46,29,20,.5); display:block; margin-bottom:3px;
+  }
+  .admin-fields input[type=text], .admin-fields input[type=number]{
+    width:100%; border:1.5px solid var(--line); border-radius:8px; padding:7px 9px;
+    font-family:'DM Sans',sans-serif; font-size:13px; background:var(--paper);
+  }
+  .admin-fields .img-row{ display:flex; gap:6px; align-items:center; }
+  .admin-fields .img-row input[type=file]{ font-size:11px; flex:1; }
+  .admin-fields .remove-img{
+    font-size:11px; color:var(--raspberry-dark); background:none; border:none;
+    cursor:pointer; text-decoration:underline; padding:0; white-space:nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div id="edit-bar">
+  <span>✎ Modo edição — altere preço, foto e nome nos cards abaixo</span>
+  <div class="actions">
+    <button id="add-cake-btn">+ Adicionar bolo</button>
+    <button id="download-btn">Baixar página atualizada</button>
+    <button id="exit-edit-btn">Sair</button>
+  </div>
+</div>
+
+<header>
+  <div class="eyebrow">Feito à mão · Corumbá, Cláudio, MG</div>
+  <h1>Bolos da Jeane</h1>
+  <p class="sub">Escolha seus bolos favoritos e envie o pedido direto pelo WhatsApp. Encomenda com pelo menos 1 dia de antecedência.</p>
+  <div class="divider"></div>
+</header>
+
+<main id="grid"></main>
+
+<div id="cart-bar">
+  <div class="info">
+    <b id="cart-total">R$ 0,00</b>
+    <span id="cart-count">0 itens selecionados</span>
+  </div>
+  <button id="open-ticket" disabled>Ver pedido</button>
+</div>
+
+<div id="overlay">
+  <div id="ticket">
+    <button id="close-ticket">✕</button>
+    <h2>Seu pedido</h2>
+    <div class="ticket-sub">confira antes de enviar</div>
+    <div id="ticket-items"></div>
+    <div id="ticket-total"><span class="label">Total</span><span id="ticket-total-val">R$ 0,00</span></div>
+
+    <div class="field">
+      <label for="cust-name">Seu nome</label>
+      <input id="cust-name" type="text" placeholder="Ex: Maria">
+    </div>
+    <div class="field">
+      <label for="cust-note">Observações (opcional)</label>
+      <textarea id="cust-note" rows="2" placeholder="Ex: sem cobertura, retirar sexta à tarde..."></textarea>
+    </div>
+
+    <button id="send-btn">Enviar pedido pelo WhatsApp</button>
+  </div>
+</div>
+
+<footer>
+  feito com carinho 🍰
+  <br>
+  <button class="edit-link" id="edit-toggle">editar cardápio</button>
+</footer>
+
+<script>
+/* =========================================================
+   COMO CUSTOMIZAR ESTA PÁGINA
+   1) Troque o número de WhatsApp em WHATSAPP_NUMBER abaixo
+      (formato: 55 + DDD + número, só números).
+   2) Edite a lista CAKES: nome, descrição, preço, emoji/estilo.
+   3) Troque o nome do negócio no <h1> e no <title> lá em cima.
+   ========================================================= */
+
+const ORIGINAL_HTML = document.documentElement.outerHTML;
+
+const WHATSAPP_NUMBER = "5537999210294";
+const EDIT_PIN = "jeane2026"; // <-- TROCAR pela senha que a Jeane vai usar pra editar
+
+const CAKES = /*CAKES_JSON_START*/[
+  { id:"choc",    name:"Bolo de Chocolate",        desc:"Massa fofinha com cobertura de brigadeiro", price:35, emoji:"🍫", style:"chocolate", image:null },
+  { id:"morango", name:"Naked Cake de Morango",     desc:"Camadas de baunilha, chantininho e morango", price:55, emoji:"🍓", style:"morango", image:null },
+  { id:"cenoura", name:"Cenoura com Chocolate",     desc:"O clássico que nunca falha",                 price:30, emoji:"🥕", style:"cenoura", image:null },
+  { id:"redvel",  name:"Red Velvet",                desc:"Aveludado, com cream cheese",                 price:45, emoji:"❤️", style:"red", image:null },
+  { id:"fuba",    name:"Bolo de Fubá Cremoso",      desc:"Com goiabada derretida por dentro",           price:28, emoji:"🌽", style:"fuba", image:null },
+  { id:"limao",   name:"Bolo de Limão",             desc:"Leve, com calda cítrica",                     price:28, emoji:"🍋", style:"limao", image:null },
+]/*CAKES_JSON_END*/;
+
+const cart = {}; // id -> qty
+let editMode = true;
+
+function formatBRL(v){
+  return v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+}
+
+function renderGrid(){
+  const grid = document.getElementById('grid');
+  grid.innerHTML = CAKES.map(cake => `
+    <div class="card">
+      ${editMode ? `<button class="remove-card-btn" onclick="removeCake('${cake.id}')" title="Remover bolo">✕</button>` : ''}
+      <div class="thumb ${cake.style}">
+        ${cake.image ? `<img src="${cake.image}" alt="${cake.name}">` : cake.emoji}
+      </div>
+      <div class="card-body">
+        <h3>${cake.name}</h3>
+        <div class="desc">${cake.desc}</div>
+        <div class="price">${formatBRL(cake.price)}</div>
+        <div class="qty-row">
+          <div class="stepper">
+            <button onclick="changeQty('${cake.id}', -1)" aria-label="Diminuir">−</button>
+            <span id="qty-${cake.id}">0</span>
+            <button onclick="changeQty('${cake.id}', 1)" aria-label="Aumentar">+</button>
+          </div>
+          <span class="add-note">un.</span>
+        </div>
+        ${editMode ? `
+        <div class="admin-fields">
+          <div>
+            <label>Nome do bolo</label>
+            <input type="text" value="${cake.name}" oninput="updateField('${cake.id}','name',this.value)">
+          </div>
+          <div>
+            <label>Preço (R$)</label>
+            <input type="number" step="0.01" min="0" value="${cake.price}" oninput="updateField('${cake.id}','price',parseFloat(this.value)||0)">
+          </div>
+          <div>
+            <label>Foto</label>
+            <div class="img-row">
+              <input type="file" accept="image/*" onchange="handleImageUpload('${cake.id}', this.files[0])">
+              ${cake.image ? `<button class="remove-img" onclick="removeImage('${cake.id}')">remover</button>` : ''}
+            </div>
+          </div>
+        </div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateField(id, field, value){
+  const cake = CAKES.find(c => c.id === id);
+  if(cake) cake[field] = value;
+  if(field === 'name' || field === 'price'){
+    // atualiza só o texto na tela sem re-renderizar tudo (evita perder foco do input)
+    const card = [...document.querySelectorAll('.card')].find(c => c.querySelector(`[onclick*="'${id}'"]`));
+    if(card){
+      if(field === 'name') card.querySelector('h3').textContent = value;
+      if(field === 'price') card.querySelector('.price').textContent = formatBRL(value);
+    }
+  }
+}
+
+function handleImageUpload(id, file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const cake = CAKES.find(c => c.id === id);
+    if(cake) cake.image = reader.result;
+    renderGrid();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage(id){
+  const cake = CAKES.find(c => c.id === id);
+  if(cake) cake.image = null;
+  renderGrid();
+}
+
+function toggleEdit(forceOff){
+  if(forceOff){
+    editMode = false;
+  } else if(!editMode){
+    const pin = prompt("Senha pra editar o cardápio:");
+    if(pin !== EDIT_PIN){
+      if(pin !== null) alert("Senha incorreta.");
+      return;
+    }
+    editMode = true;
+  } else {
+    editMode = false;
+  }
+  document.getElementById('edit-bar').classList.toggle('show', editMode);
+  renderGrid();
+}
+
+function downloadUpdatedPage(){
+  try{
+    const newCakesBlock = JSON.stringify(CAKES, null, 2);
+    let html = ORIGINAL_HTML.replace(
+      /\/\*CAKES_JSON_START\*\/[\s\S]*?\/\*CAKES_JSON_END\*\//,
+      `/*CAKES_JSON_START*/${newCakesBlock}/*CAKES_JSON_END*/`
+    );
+    html = '<!DOCTYPE html>\n' + html;
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pedido-bolos.html';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch(err){
+    alert("Algo deu errado ao gerar o arquivo. Tente recarregar a página e refazer as edições.");
+  }
+}
+
+function removeCake(id){
+  if(!confirm("Remover este bolo do cardápio?")) return;
+  const idx = CAKES.findIndex(c => c.id === id);
+  if(idx !== -1) CAKES.splice(idx, 1);
+  delete cart[id];
+  renderGrid();
+  updateCartBar();
+}
+
+function addCake(){
+  const id = 'bolo-' + Date.now();
+  const styles = ['chocolate','morango','cenoura','red','fuba','limao'];
+  const randomStyle = styles[Math.floor(Math.random() * styles.length)];
+  CAKES.push({
+    id,
+    name: "Novo Bolo",
+    desc: "Descreva aqui esse bolo",
+    price: 0,
+    emoji: "🎂",
+    style: randomStyle,
+    image: null
+  });
+  renderGrid();
+  // rola até o novo card pra facilitar preencher
+  requestAnimationFrame(() => {
+    const cards = document.querySelectorAll('.card');
+    cards[cards.length - 1]?.scrollIntoView({ behavior:'smooth', block:'center' });
+  });
+}
+
+document.getElementById('add-cake-btn').addEventListener('click', addCake);
+document.getElementById('edit-toggle').addEventListener('click', () => toggleEdit(false));
+document.getElementById('exit-edit-btn').addEventListener('click', () => toggleEdit(true));
+document.getElementById('download-btn').addEventListener('click', downloadUpdatedPage);
+
+function changeQty(id, delta){
+  const current = cart[id] || 0;
+  const next = Math.max(0, current + delta);
+  cart[id] = next;
+  document.getElementById(`qty-${id}`).textContent = next;
+  updateCartBar();
+}
+
+function getCartEntries(){
+  return CAKES
+    .filter(c => (cart[c.id] || 0) > 0)
+    .map(c => ({ ...c, qty: cart[c.id] }));
+}
+
+function getTotal(entries){
+  return entries.reduce((sum, e) => sum + e.qty * e.price, 0);
+}
+
+function updateCartBar(){
+  const entries = getCartEntries();
+  const total = getTotal(entries);
+  const count = entries.reduce((s,e) => s + e.qty, 0);
+  document.getElementById('cart-total').textContent = formatBRL(total);
+  document.getElementById('cart-count').textContent = count === 1 ? '1 item selecionado' : `${count} itens selecionados`;
+  const openBtn = document.getElementById('open-ticket');
+  openBtn.disabled = count === 0;
+}
+
+function renderTicket(){
+  const entries = getCartEntries();
+  const itemsEl = document.getElementById('ticket-items');
+  const totalEl = document.getElementById('ticket-total-val');
+
+  if(entries.length === 0){
+    itemsEl.innerHTML = `<div class="empty-msg">Nenhum bolo selecionado ainda.</div>`;
+  } else {
+    itemsEl.innerHTML = entries.map(e => `
+      <div class="t-row">
+        <span class="name">${e.qty}x ${e.name}</span>
+        <span class="val">${formatBRL(e.qty * e.price)}</span>
+      </div>
+    `).join('');
+  }
+  totalEl.textContent = formatBRL(getTotal(entries));
+}
+
+document.getElementById('open-ticket').addEventListener('click', () => {
+  renderTicket();
+  document.getElementById('overlay').classList.add('show');
+});
+document.getElementById('close-ticket').addEventListener('click', () => {
+  document.getElementById('overlay').classList.remove('show');
+});
+document.getElementById('overlay').addEventListener('click', (e) => {
+  if(e.target.id === 'overlay') document.getElementById('overlay').classList.remove('show');
+});
+
+document.getElementById('send-btn').addEventListener('click', () => {
+  const entries = getCartEntries();
+  if(entries.length === 0) return;
+
+  const name = document.getElementById('cust-name').value.trim();
+  const note = document.getElementById('cust-note').value.trim();
+  const total = getTotal(entries);
+
+  let msg = `Olá! Gostaria de fazer um pedido:\n\n`;
+  entries.forEach(e => {
+    msg += `• ${e.qty}x ${e.name} — ${formatBRL(e.qty * e.price)}\n`;
+  });
+  msg += `\nTotal: ${formatBRL(total)}`;
+  if(name) msg += `\n\nNome: ${name}`;
+  if(note) msg += `\nObs: ${note}`;
+
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+});
+
+renderGrid();
+updateCartBar();
+document.getElementById('edit-bar').classList.toggle('show', editMode);
+</script>
+</body>
+</html>
